@@ -1,6 +1,8 @@
 # 吾苍耳冯福 · 五字符密码册
 
 把一段文字编成「吾苍耳冯福」五个字，再原样读回来。
+这个项目灵感来源于我的同学
+适配平板
 
 一个 Android 单文件 WebView 应用（约 1.7 MB）：页面、字体、图标全部内嵌，**运行时零网络，
 清单里不申请任何权限**，不注册、不上传、不需要服务器。
@@ -33,7 +35,7 @@
 于是密文长度永远等于「字节数 × 4」，四个符号是半个汉字，十二个符号正好一个汉字，
 可以无损往返。
 
-> **这不是加密。** 没有密钥、没有密码学强度，任何人拿到密文都能还原。它是个暗号玩具，
+> **这不是加密。** 没有密钥、没有密码学强度，任何人拿到密文都能还原。它是个暗号玩具喵，
 > 请不要用它保存或传输密码、隐私、商业机密。
 
 ## 功能
@@ -54,11 +56,11 @@
 从 [Releases](../../releases) 下载最新的 `wucangerfengfu.apk`，传到手机上安装
 （需要允许「安装未知来源应用」）。
 
-本仓库只放源码，不放编译好的 APK —— 这样 clone 下来只有 3 MB 左右。
+
 
 ## 自己构建
 
-不需要 Android Studio，也不走 Gradle。工具链只有四样：
+工具链只有四样：
 
 - JDK 17（只用 `javac` 和 `java`）
 - Android SDK **build-tools 34.0.0**（提供 `aapt2`、`zipalign`、`apksigner`、`d8.jar`）
@@ -140,6 +142,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ## 致谢
 
 灵感来自聂某、徐某；界面与代码在 ChatGPT6 / DeepSeek v4.1 Flash 的协助下完成。
+有bug欢迎反馈：guoshinia@outlook.com
+bilibiliuid:3546587399719598
+www.youtube.com/@HatMaury-k6g
 
 ---
 
