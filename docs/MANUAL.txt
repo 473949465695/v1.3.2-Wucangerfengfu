@@ -1,0 +1,524 @@
+﻿吾苍耳冯福  五字符密码册
+WU-CANG-ER-FENG-FU  ·  a five-character codebook for Android
+==============================================================================
+版本 1.3.0 (versionCode 5)   ·   最后更新 2026-11-08   ·   APK 约 1.74 MB
+
+
+==============================================================================
+一、这是什么
+==============================================================================
+
+一个纯本地运行的安卓小工具：把任意一段文字编成「吾苍耳冯福」这五个字组成的
+字符串，也能把它还原回来。做出来是给朋友之间发暗号、玩梗用的，不是加密工具。
+
+一句话原理：一个字在 UTF-8 里是 1～4 个字节，每个字节是 0～255；把每个字节
+写成四位五进制（0000～4444），再把每一位换成五个字，就得到密文。所以密文长度
+永远是原文【字节数 × 4】，四个符号正好一个字节，十二个符号正好一个汉字。
+
+    「苍」→ UTF-8 = E8 8B 8D → 232 139 141
+           → 苍福苍耳 / 苍吾耳福 / 苍吾冯苍
+
+全部在本机完成：不联网、不注册、不上传。卸载之后，存根和册号一起消失。
+
+
+==============================================================================
+二、编码规格（可以照着手工实现）
+==============================================================================
+
+字母表（位值）：
+
+    0 = 吾      1 = 苍      2 = 耳      3 = 冯      4 = 福
+
+编码：
+    1. 文本按 UTF-8 取字节序列 b1 b2 ... bn
+    2. 每个 b 拆成四位五进制 d1 d2 d3 d4（高位在前），
+       满足 b = d1*125 + d2*25 + d3*5 + d4
+    3. 每位换成对应汉字，按顺序连起来，不加分隔符
+
+解码：
+    1. 去掉所有空白字符（空格、换行、全角空格都算）
+    2. 字符必须全部在「吾苍耳冯福」里；出现别的字就报错并给出是第几个
+    3. 字符个数必须是 4 的倍数
+    4. 每四位算回一个字节；算出来大于 255 就报错并给出是第几组
+    5. 字节序列必须是合法的 UTF-8，否则报错（不会悄悄丢字）
+
+解码报错的四种情况（应用里就是这四句话）：
+
+    第 5 个字符「a」不在吾苍耳冯福里。
+    有效字符共 5 个，不是 4 的倍数，密文不完整。
+    第 1 组超出字节范围，无法还原。
+    （以及「还原结果不是合法的 UTF-8 文本」）
+
+注意：这是可逆编码，不是加密。没有密钥、没有密码学强度，任何人拿到密文都能
+还原——请在「使用须知」那五条的前提下使用。
+
+
+==============================================================================
+三、功能清单（1.3.0）
+==============================================================================
+
+编码 / 还原
+    输入框写明文按「编 码」，写密文按「还 原」；也可以在密文框里按「交 换」
+    把结果搬回输入框，或者「清 空」重新来。编码只认点按钮，不做输入即编。
+
+一键复制
+    结果下面有「复制密文 / 复制明文」按钮，编码完复制密文，还原完复制明文。
+    按钮上的字会跟着结果类型变。
+
+发给朋友（1.3.0 新增）
+    结果区页眉右侧「发给朋友」，直接调起系统的分享面板（微信、QQ、短信…）。
+    走的是 Android 的 ACTION_SEND，不需要任何权限。
+
+分享进来（1.3.0 新增）
+    在别的应用里选中文字 → 分享 → 吾苍耳冯福，就会跳到本应用：
+    看起来像密文（全是这五个字且长度是 4 的倍数）就自动还原，否则自动编码。
+
+字号三档（1.3.0 新增）
+    页眉「字号 中」，点一下按 中 → 大 → 小 循环，记在本地。全应用所有字号
+    一起缩放（93% / 100% / 113%）。
+
+日间 / 夜间
+    页眉「夜间版 / 日间版」，纸色和墨色互换。记在本地。
+
+存根（历史记录）
+    每次成功转换自动留一张存根，最多 50 张，新的在上。每张有：
+    NO.00N、类型（编码 / 还原）、时间、明文一行、密文一行，以及
+    「载入」「复制」「下载」「删除」四个动作。
+    「下载」存成 .txt（系统保存对话框，你选目录，不需要存储权限）。
+    txt 内容长这样：
+
+        吾苍耳冯福 · 存根 NO.002
+        类型：编码
+        时间：2026-11-08 16:57
+
+        明文：晚上八点老地方，别迟到。
+
+        密文：苍福苍吾 苍苍吾冯 ...
+
+撤销（1.3.0 新增）
+    「清空」「交换」「删除一张存根」「清空存根」之后，状态行右边会出现
+    「撤销」，六秒内点它可以还原到操作前的样子。
+
+使用须知
+    首次打开是全屏的使用须知与免责声明（五条）。点「同意并进入」才进去；
+    「不同意，退出应用」会真的退出（WebView 里的 window.close 被桥接到了
+    Activity.finish）。这一页的文字是逐字保留的，只换了配色和排版。
+
+册号
+    页眉右上角「册号 30884」，第一次打开随机生成一个五位数存在本地，之后
+    不变。它只是这本小册子的编号，不参与编解码，也不随密文发出去。
+
+
+==============================================================================
+四、界面设计
+==============================================================================
+
+世界设定是一本随身的一次性密码本：纸、墨、朱三色，全篇宋体，密排栅格，
+没有任何动效：切换视图、出结果都是瞬时的。
+
+    · 页眉：书名「吾苍耳冯福」+ 一行小字「五字符密码册 · 全部在本机完成」
+      + 册号 / 版本 / 夜间版 / 字号
+    · 样本条：五个字一字一格，字上方标着位数 0～4，点一下就插进输入框
+    · 输入区：叫「明文」或「密文」，右上角显示「12 字 · 36 字节」
+    · 按钮：「编 码」墨底反白，是主按钮；「还 原」描边，是次按钮
+    · 结果：密文按四个一组排成格子，像密码本上划好的方格
+    · 底部三栏：编码器 / 公告 / 存根，瞬时切换，没有滑动动画
+
+平板（横屏或大屏）不是把手机放大，而是把册子摊开成左右两页：左页写、右页
+出密文，中间一条 1px 竖线当书脊。窄屏仍是单栏。
+
+配色只有三样：纸色（日间 #f4f1e8 附近 / 夜间 #14161a 附近）、墨色、朱色
+（#b4342a 附近）。没有渐变、没有阴影、没有圆角卡片——层级靠 1px 发丝线和
+字号，不靠投影。
+
+
+==============================================================================
+五、怎么构建（不用 Android Studio）
+==============================================================================
+
+全部用手工工具链，不上 Gradle。需要的四样东西：
+
+    · JDK 17（只用到 javac 和 java）
+    · Android SDK build-tools 34.0.0（提供 aapt2、zipalign、apksigner、d8.jar）
+    · Android platform 34 的 android.jar
+    · 本仓库的 app/ 目录（清单、代码、资源、assets）
+
+在仓库根目录下：
+
+    powershell -ExecutionPolicy Bypass -File build.ps1
+
+它依次做六步：aapt2 compile 资源 → aapt2 link 打包（含 -A app\assets）
+→ javac 编译 Java → d8 转 dex → 组装未对齐 APK 并修正 asset 路径 → zipalign
+对齐 + apksigner 签名（debug 密钥，v1/v2/v3 全签）。
+
+六个坑（都踩过，都写进脚本了）：
+
+    1. 工作区路径含中文时，aapt2 / zipalign 这些原生程序按 ANSI 读参数会
+       报 ENOENT。脚本里先 Set-Location 到脚本目录，全用相对 ASCII 路径。
+    2. aapt2 link 的 -R 是 overlay 语义，编译产物要作为位置参数传，不能用 -R，
+       否则报 "does not override an existing resource"。
+    3. 无 BOM 的 UTF-8 .ps1 会被 Windows PowerShell 5.1 按 GBK 解码，中文字节
+       吃掉引号导致解析错误。脚本保持纯 ASCII，汉字用 [char]0x543E 这种写法。
+    4. aapt2 在 Windows 上写 asset 条目名用的是反斜杠（assets\fonts\x.otf），
+       Android 的 AssetManager 按 / 查找会 404，字体静默回退。脚本在打包后
+       打开 zip 把反斜杠条目改名成 /，再对齐、签名。
+    5. 构建脚本的退出码可能是 1：javac 的 deprecation 提示走 stderr，被
+       PowerShell 5.1 当成 NativeCommandError。构建本身是成功的。
+    6. 资源里只有一个 Activity，launchMode 必须是 singleTop，否则从别的应用
+       分享进来时会新开一个实例，onNewIntent 不会触发。
+
+
+==============================================================================
+六、文件清单
+==============================================================================
+
+    wucangerfengfu.apk                 成品，1.3.0，可直接装
+    README.txt                         这份文件
+    README.md                          早期版本的技术说明（中文）
+    build.ps1                          构建脚本（六步）
+    make-icon.ps1                      用 System.Drawing 生成五种密度的图标
+    subset-font.py                     字体子集化脚本
+    debug.keystore                     签名用调试密钥
+    app/AndroidManifest.xml            清单：包名、版本、SEND 过滤器
+    app/src/com/wcf/editor/MainActivity.java
+                                       WebView 外壳：剪贴板桥、退出桥、
+                                       保存 txt、分享进出、注入 shim
+    app/res/values/strings.xml         app_name = 吾苍耳冯福
+    app/res/mipmap-*/ic_launcher.png   五种密度图标
+    app/assets/index.html              整个界面（单文件，内联样式与脚本，54 KB）
+    app/assets/fonts/wcf-serif-400.otf 思源宋体子集（常规，1.1 MB）
+    app/assets/fonts/wcf-serif-700.otf 思源宋体子集（粗体，1.1 MB）
+
+字体是 Noto Serif SC 的子集：只保留页面用到的字 + ASCII + GB2312 一级 3755 字，
+所以两个字重各 1.1 MB，而不是原字体的 11 MB。子集化用 fonttools 的 pyftsubset。
+
+MainActivity 里注入的 shim 做两件事：把 navigator.clipboard.writeText 重定向到
+原生剪贴板（file:// 页面里浏览器自带的剪贴板不可靠），把 window.close 映射到
+finish()。桥接对象名叫 AndroidShell，暴露五个方法：copyToClipboard、closeApp、
+saveText、shareText、takeShared。
+
+
+==============================================================================
+七、开发工具（不打包进 APK）
+==============================================================================
+
+    probe.mjs    用 CDP 连无头 Chrome：设设备尺寸、导航、执行脚本、截图。
+                 参数 <fileUrl> <宽> <高> <输出png|-> [脚本文件]，
+                 CDP_PORT 指定端口，CDP_FULL=1 整页截图。
+    _shot.js     按 location.hash 摆好场景再截图（editor/ink/announce/
+                 history/decode/error/consent）
+    _smoke.js    功能回归：同意页、六组往返、三条错误文案、主题、存根
+    _measure.js  布局量化：各块宽度、是否横向溢出、能否滚动
+
+用法示例：
+
+    Start-Process 'C:\Program Files\Google\Chrome\Application\chrome.exe' `
+      -ArgumentList '--headless=new','--disable-gpu','--remote-debugging-port=9334',
+                    "--user-data-dir=$env:TEMP\cdp"
+    $env:CDP_PORT='9334'
+    node probe.mjs "file:///.../app/assets/index.html" 390 844 out.png dev/_smoke.js
+
+
+==============================================================================
+八、已知限制
+==============================================================================
+
+    · 没有在真机上跑过：保存对话框、系统分享面板、剪贴板、旋转都只是静态
+      与模拟验证（无头 Chrome + 桌面 JVM 编译）。
+    · 密文长度是原文的 4 倍（UTF-8 字节数 × 4），八百字的长文会变成三千多
+      符号，聊天软件可能装不下。暂时没有分段功能。
+    · 存根只在本机，换手机、清数据就没了，没有导出全部的功能。
+    · 只有一种编码方案，没有校验位：手抄时写反一个字，可能解出一段看着像话
+      的错文，而不会报错。
+    · 五字编码是公开可逆的，不构成加密。
+
+
+==============================================================================
+九、更新日志
+==============================================================================
+
+1.3.2  去掉了清单里多余的联网与网络状态权限，现在应用不申请任何权限。
+
+1.3.1  去掉了转换完成后盖的那枚朱印。
+
+1.3.0  可以从别的应用把文字分享进来，自动编成密文；收到密文则自动还原。
+       结果页眉多了「发给朋友」，直接调起系统分享面板。
+       页眉新增字号三档：小、中、大。
+       清空、交换、删除存根之后六秒内可以撤销。
+
+1.2.0  平板适配：屏幕够宽时摊成左右两页，左边写、右边出密文。
+       结果下面加了「一键复制」按钮：编码完复制密文，还原完复制明文。
+       存根可以「下载」成 txt 文件，存到手机里。
+       公告页删去原理与使用说明，只留关于与更新概述。
+
+1.1.0  全新外观：纸本密码册，页眉标册号，转换完成盖一枚朱印。
+       密文按四个一组排成栅格，五个字下方标出各自的位数。
+       历史记录改成一张张存根，可载入、复制、删除。
+       底部导航改为瞬时切换，去掉了滑动动画。
+
+1.0.2  文案改为手机应用口径，不再提浏览器与网页。
+       关于页更新致谢：ChatGPT6、DeepSeek v4.1 Flash。
+
+1.0.1  新增公告与历史记录两个页面，底部可切换。
+       历史最多保留五十条，支持载入、复制结果、删除。
+
+1.0    第一版：五字编码与还原、一键复制、日间夜间、使用须知。
+
+
+==============================================================================
+十、致谢
+==============================================================================
+
+本应用由 ChatGPT6、DeepSeek v4.1 Flash 制作，感谢聂某、徐某提供的灵感。
+Made with ChatGPT6 and DeepSeek v4.1 Flash. Thanks to 聂某 and 徐某 for the idea.
+
+
+##############################################################################
+#                                                                            #
+#                             ENGLISH VERSION                                #
+#                                                                            #
+##############################################################################
+
+
+==============================================================================
+1. WHAT IT IS
+==============================================================================
+
+A small offline Android tool that turns any text into a string made only of the
+five characters 吾 苍 耳 冯 福, and turns it back. It is meant for sending coded
+notes to friends, not for protecting secrets.
+
+How it works, in one line: a character is 1-4 bytes in UTF-8, each byte is
+0-255, and every byte is written as four base-5 digits (0000-4444). Each digit
+is mapped to one of the five characters. So the cipher is always exactly
+4 x (number of UTF-8 bytes) characters long: four symbols per byte, twelve
+symbols per Chinese character.
+
+    "苍" -> UTF-8 = E8 8B 8D -> 232 139 141
+         -> 苍福苍耳 / 苍吾耳福 / 苍吾冯苍
+
+Everything runs on the device: no network, no account, no upload. Uninstalling
+takes the saved stubs and the book number with it.
+
+
+==============================================================================
+2. THE CODE (you can reimplement it by hand)
+==============================================================================
+
+Alphabet (digit values):
+
+    0 = 吾    1 = 苍    2 = 耳    3 = 冯    4 = 福
+
+Encode:
+    1. take the UTF-8 bytes b1 b2 ... bn of the text
+    2. split each byte into four base-5 digits d1..d4 (most significant first),
+       where b = d1*125 + d2*25 + d3*5 + d4
+    3. map each digit to its character and concatenate, with no separator
+
+Decode:
+    1. strip all whitespace
+    2. every character must be one of the five; anything else is an error that
+       names the offending position
+    3. the character count must be a multiple of 4
+    4. every group of four must evaluate to 0-255, otherwise an error names the
+       group
+    5. the resulting bytes must be valid UTF-8, otherwise an error is raised
+       (nothing is ever dropped silently)
+
+This is a reversible encoding, not encryption. There is no key and no
+cryptographic strength; anybody holding the cipher can restore the text.
+
+
+==============================================================================
+3. FEATURES (1.3.0)
+==============================================================================
+
+Encode / decode      Press "编 码" for plain text, "还 原" for cipher. "交 换"
+                     moves the result back into the input, "清 空" starts over.
+                     Text is never encoded while typing; you press a button.
+Copy                 A "复制密文 / 复制明文" button under the result. Its label
+                     follows the type of the result.
+Share out (new)      "发给朋友" in the result header opens the system share
+                     sheet (WeChat, QQ, SMS, ...) through ACTION_SEND. No
+                     permission required.
+Share in (new)       Select text in any app -> Share -> 吾苍耳冯福. The app
+                     opens with it: if it looks like a cipher (only the five
+                     characters, length a multiple of 4) it decodes it, else it
+                     encodes it.
+Text size (new)      "字号 中" in the header cycles medium -> large -> small and
+                     remembers the choice. Every font size in the app scales
+                     together (93% / 100% / 113%).
+Day / night          Paper and ink swap. The choice is remembered.
+Stubs (history)      Every successful conversion leaves a stub, newest first,
+                     up to 50: NO.00N, type, time, one line of plain text, one
+                     line of cipher, and four actions - load, copy, download,
+                     delete. Download writes a .txt through the system save
+                     dialog (no storage permission).
+Undo (new)           After clear, swap, delete-a-stub or clear-all, an "撤销"
+                     link appears for six seconds and restores the previous
+                     state.
+Consent screen       First launch shows the five-point notice. Agreeing enters
+                     the app; declining really quits (window.close is bridged
+                     to Activity.finish). The wording is kept verbatim.
+Book number          "册号 30884" in the header is a random five-digit number
+                     generated on first launch and kept. It is decoration only:
+                     it does not take part in coding and is never sent.
+
+
+==============================================================================
+4. DESIGN
+==============================================================================
+
+The design world is a pocket one-time pad: paper, ink and vermilion; serif type
+throughout; a dense grid; no motion at all - switching and results are instant.
+
+    - Header: the title, a subtitle, then book number / version / night mode /
+      text size.
+    - Specimen strip: the five characters as five cells, each labelled with its
+      digit (0-4); tapping a cell inserts that character.
+    - Input block: labelled 明文 or 密文, with "12 字 · 36 字节" on the right.
+    - Buttons: filled ink "编 码" is primary, outlined "还 原" is secondary.
+    - Result: the cipher is laid out four characters per group, like the ruled
+      squares of a real codebook.
+    - Bottom bar: encoder / notice / stubs, instant switching, no sliding
+      indicator.
+
+On a tablet the book opens as a two-page spread - write on the left page, read
+the cipher on the right, with a 1px rule down the middle as the spine. Phones
+keep a single column.
+
+Three colours only: paper, ink, vermilion. No gradients, no shadows, no rounded
+cards - hierarchy comes from hairlines and type size, not from elevation.
+
+
+==============================================================================
+5. BUILDING IT (without Android Studio)
+==============================================================================
+
+No Gradle. The build is aapt2 -> javac -> d8 -> zipalign -> apksigner, driven by
+a PowerShell script. You need JDK 17, build-tools 34.0.0, platform android-34,
+and this app/ directory.
+
+    powershell -ExecutionPolicy Bypass -File build.ps1
+
+Six traps, all handled in the script:
+
+    1. Native SDK tools (aapt2, zipalign) read arguments in the ANSI codepage,
+       so absolute paths containing non-ASCII characters fail with ENOENT. The
+       script cd's to its own folder and uses relative ASCII paths only.
+    2. aapt2 link's -R is overlay semantics; compiled resources must be passed
+       positionally or you get "does not override an existing resource".
+    3. A BOM-less UTF-8 .ps1 is decoded as GBK by Windows PowerShell 5.1 and
+       Chinese bytes eat the quotes. Keep the script pure ASCII and use
+       [char]0x543E for glyphs.
+    4. aapt2 names asset entries with backslashes on Windows
+       (assets\fonts\x.otf); Android's AssetManager looks them up with "/" and
+       silently falls back. The script renames those entries inside the zip
+       before aligning and signing.
+    5. The script may exit 1 because javac writes deprecation notes to stderr
+       and PowerShell 5.1 treats that as NativeCommandError. The build is fine.
+    6. The single activity uses launchMode="singleTop"; otherwise an incoming
+       share starts a second instance and onNewIntent never fires.
+
+
+==============================================================================
+6. FILES
+==============================================================================
+
+    wucangerfengfu.apk                   the app, 1.3.0
+    README.txt                           this file
+    README.md                            earlier technical notes (Chinese)
+    build.ps1                            the six build steps
+    make-icon.ps1                        generates the five icon densities
+    subset-font.py                       font subsetting script
+    debug.keystore                       debug signing key
+    app/AndroidManifest.xml              package, version, SEND filter
+    app/src/com/wcf/editor/MainActivity.java
+                                         WebView shell: clipboard bridge, close
+                                         bridge, save-as-txt, share in/out,
+                                         shim injection
+    app/res/values/strings.xml           app_name = 吾苍耳冯福
+    app/res/mipmap-*/ic_launcher.png     icons
+    app/assets/index.html                the whole UI, one file, inline CSS + JS
+    app/assets/fonts/wcf-serif-400.otf   Noto Serif SC subset, regular, 1.1 MB
+    app/assets/fonts/wcf-serif-700.otf   Noto Serif SC subset, bold, 1.1 MB
+
+The fonts are subsets: the page's own characters + ASCII + the 3755 most common
+GB2312 characters, cut with fonttools pyftsubset. That is why each weight is
+1.1 MB instead of the original 11 MB.
+
+The injected shim (1) routes navigator.clipboard.writeText to the real Android
+clipboard, because the built-in one is unreliable for file:// documents inside a
+WebView, and (2) maps window.close to Activity.finish(). The bridge object is
+called AndroidShell and exposes five methods: copyToClipboard, closeApp,
+saveText, shareText, takeShared.
+
+
+==============================================================================
+7. DEV TOOLS (not packaged)
+==============================================================================
+
+    probe.mjs    drives headless Chrome over CDP: set device metrics, navigate,
+                 run a script, screenshot. Args: <fileUrl> <w> <h> <out.png|->
+                 [script.js]; env CDP_PORT, CDP_FULL=1 for full-page capture.
+    _shot.js     prepares a scene by location.hash (editor/ink/announce/history/
+                 decode/error/consent) and reports overflow numbers
+    _smoke.js    regression: consent, six round-trips, three error messages,
+                 theme, stubs
+    _measure.js  layout measurement: block widths, horizontal overflow, scroll
+
+
+==============================================================================
+8. KNOWN LIMITS
+==============================================================================
+
+    - Never run on a real device: the save dialog, the share sheet, the
+      clipboard and rotation are verified statically and in headless Chrome
+      only.
+    - The cipher is 4x the original byte length, so a long note becomes a very
+      long string that a chat app may refuse. There is no chunking yet.
+    - Stubs live only on the device; changing phones or clearing data loses
+      them, and there is no export-all.
+    - There is no checksum: a single mistyped character can decode into wrong
+      but plausible text instead of raising an error.
+    - The five-character code is public and reversible. It is not encryption.
+
+
+==============================================================================
+9. CHANGELOG
+==============================================================================
+
+1.3.2  Dropped the leftover INTERNET and ACCESS_NETWORK_STATE permissions -
+       the app now asks for none at all.
+
+1.3.1  The red stamp that used to hit the page after a conversion is gone.
+
+1.3.0  Text can be shared in from other apps and is encoded (or decoded, if it
+       already looks like a cipher). New "发给朋友" button opens the system
+       share sheet. Three text sizes. Undo within six seconds after clear,
+       swap, delete-stub and clear-all.
+
+1.2.0  Tablet layout: the book opens as a two-page spread. One-tap copy button
+       under the result. Stubs can be downloaded as .txt. The notice page keeps
+       only the credits and the changelog.
+
+1.1.0  Complete redesign: a paper codebook, a book number in the header, a red
+       seal stamped on every conversion. Cipher laid out four characters per
+       group with digit labels. History became stubs with load/copy/delete.
+       Bottom navigation switches instantly.
+
+1.0.2  Copy rewritten for a phone app; the credits line updated to ChatGPT6 and
+       DeepSeek v4.1 Flash.
+
+1.0.1  Added the notice page and the history page with bottom navigation.
+       History keeps up to fifty entries.
+
+1.0    First release: encode/decode, copy, day/night, consent screen.
+
+
+==============================================================================
+10. CREDITS
+==============================================================================
+
+Made with ChatGPT6 and DeepSeek v4.1 Flash.
+Thanks to 聂某 and 徐某 for the idea.

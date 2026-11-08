@@ -1,0 +1,1613 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E8E9E0">
+<meta name="color-scheme" content="light dark">
+<title>吾苍耳冯福</title>
+<style>
+/* ============================================================
+   吾苍耳冯福 · 纸本密码册
+   世界：一本随身的一次性密码本，页边有册号，转换完成盖朱印。
+   借来的四样：宋体排版 / 纸墨朱三色 / 密排的数字与栅格 / 一个动作（盖章）。
+   ============================================================ */
+
+@font-face{
+  font-family:"WCF Serif";
+  src:url("fonts/wcf-serif-400.otf") format("opentype");
+  font-weight:400; font-style:normal; font-display:block;
+}
+@font-face{
+  font-family:"WCF Serif";
+  src:url("fonts/wcf-serif-700.otf") format("opentype");
+  font-weight:700; font-style:normal; font-display:block;
+}
+
+:root{
+  --serif:"WCF Serif","Noto Serif CJK SC","Source Han Serif SC","Songti SC",serif;
+  --mono:ui-monospace,"SF Mono","Roboto Mono","DejaVu Sans Mono",monospace;
+  --gutter:16px;
+  --bar-h:calc(56px + env(safe-area-inset-bottom,0px));
+}
+
+:root[data-theme="paper"]{
+  --paper:#E8E9E0;
+  --paper-2:#F1F2EA;
+  --paper-3:#DCDDD2;
+  --ink:#191A15;
+  --ink-2:#3F4038;
+  --ink-3:#5F6055;
+  --rule:rgba(25,26,21,.20);
+  --rule-2:rgba(25,26,21,.44);
+  --red:#B92D17;
+}
+:root[data-theme="ink"]{
+  --paper:#14150E;
+  --paper-2:#1D1E15;
+  --paper-3:#2A2B1F;
+  --ink:#EAEBDF;
+  --ink-2:#C2C3B2;
+  --ink-3:#8E8F80;
+  --rule:rgba(234,235,223,.20);
+  --rule-2:rgba(234,235,223,.46);
+  --red:#E25538;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html{height:100%;}
+body{min-height:100%;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:calc(15px * var(--tz));
+  line-height:1.6;
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+body::before{
+  /* 纸的横向纤维：极淡的一道压痕，落在页眉下方 */
+  content:"";
+  position:fixed; left:0; right:0; top:0; height:3px;
+  background:var(--rule);
+  opacity:.5;
+  pointer-events:none;
+}
+h1,h2,h3,p,ul,ol{margin:0;}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;}
+textarea{font:inherit;color:inherit;}
+
+::selection{background:rgba(185,45,23,.20);color:var(--ink);}
+:root[data-theme="ink"] ::selection{background:rgba(226,85,56,.28);}
+
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+
+/* ── 应用外壳 ─────────────────────────────────────────── */
+.app{
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  padding-bottom:var(--bar-h);
+}
+
+/* ── 页眉：册名 + 册号 ─────────────────────────────────── */
+.masthead{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter) 10px;
+  border-bottom:1px solid var(--rule-2);
+}
+.wordmark{
+  font-size:calc(21px * var(--tz));
+  font-weight:700;
+  letter-spacing:.03em;
+  line-height:1.2;
+}
+.tagline{
+  margin-top:3px;
+  font-size:calc(11px * var(--tz));
+  line-height:1.4;
+  color:var(--ink-3);
+  letter-spacing:.01em;
+}
+.masthead-side{
+  flex:none;
+  margin-left:auto;
+  text-align:right;
+  padding-top:2px;
+}
+.padno{
+  display:block;
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.16em;
+  color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+.masthead-side .side-row{
+  margin-top:6px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px 8px;
+}
+.ver{
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.08em;
+  color:var(--ink-3);
+}
+.theme-btn{
+  font-size:calc(11px * var(--tz));
+  color:var(--ink-2);
+  padding:2px 0;
+  border-bottom:1px solid var(--rule-2);
+  letter-spacing:.04em;
+}
+.theme-btn:active{color:var(--red);border-color:var(--red);}
+
+/* ── 页面 ───────────────────────────────────────────── */
+.pages{flex:1 0 auto;display:flex;flex-direction:column;}
+.page{display:none;padding:0 var(--gutter) 28px;}
+.page.is-active{display:block;}
+.page-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  padding:20px 0 12px;
+  border-bottom:1px solid var(--rule-2);
+}
+.page-head h1{
+  font-size:calc(19px * var(--tz));
+  font-weight:700;
+  letter-spacing:.02em;
+}
+.page-head .head-meta{
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.12em;
+  color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ── 五字字谱（页眉下方的样本行） ─────────────────────── */
+.specimen{
+  display:flex;
+  border-bottom:1px solid var(--rule-2);
+  margin:0 calc(-1 * var(--gutter));
+  padding:0 var(--gutter);
+}
+.spec{
+  flex:1 1 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  padding:10px 0 9px;
+  border-right:1px solid var(--rule);
+  border-radius:0;
+  transition:background-color .12s linear;
+}
+.spec:last-child{border-right:0;}
+.spec:active{background:var(--paper-3);}
+.spec-d{
+  font-family:var(--mono);
+  font-size:calc(9px * var(--tz));
+  line-height:1;
+  letter-spacing:.1em;
+  color:var(--ink-3);
+}
+.spec-g{
+  font-size:calc(26px * var(--tz));
+  line-height:1.15;
+  font-weight:700;
+}
+
+/* ── 输入 / 输出区 ──────────────────────────────────── */
+.field-block{margin-top:20px;}
+.field-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.field-label{
+  font-size:calc(13px * var(--tz));
+  font-weight:700;
+  letter-spacing:.10em;
+}
+.field-meta{
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.06em;
+  color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+.shell{
+  border:1px solid var(--rule-2);
+  background:var(--paper-2);
+  padding:10px 12px;
+}
+.shell[data-invalid="1"]{border-color:var(--red);}
+textarea#input{
+  display:block;
+  width:100%;
+  min-height:88px;
+  max-height:190px;
+  padding:0;
+  border:0;
+  background:transparent;
+  resize:none;
+  outline:none;
+  font-size:calc(15px * var(--tz));
+  line-height:1.75;
+  caret-color:var(--red);
+  overflow-y:auto;
+}
+textarea#input::placeholder{color:var(--ink-3);opacity:1;}
+
+.field-tools{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:14px;
+  margin-top:7px;
+}
+.txt-btn{
+  font-size:calc(11px * var(--tz));
+  letter-spacing:.06em;
+  color:var(--ink-3);
+  padding:3px 0;
+  border-bottom:1px solid transparent;
+}
+.txt-btn:active,.txt-btn[data-on="1"]{color:var(--red);border-color:var(--red);}
+.txt-btn:disabled{color:var(--ink-3);opacity:.45;}
+
+/* ── 一键复制：结果出来就在手边 ────────────────── */
+.copy-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 13px;
+  border:1px solid var(--ink);
+  color:var(--ink);
+  font-size:calc(12.5px * var(--tz));
+  letter-spacing:.12em;
+  transition:background-color .12s linear,color .12s linear;
+}
+.copy-btn[hidden]{display:none;}
+.copy-btn svg{
+  width:13px;
+  height:13px;
+  flex:none;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.3;
+}
+.copy-btn:active,.copy-btn[data-on="1"]{background:var(--ink);color:var(--paper);}
+
+/* ── 两个主按钮 ─────────────────────────────────────── */
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:18px;
+}
+.btn{
+  padding:13px 10px;
+  font-size:calc(15px * var(--tz));
+  font-weight:700;
+  letter-spacing:.14em;
+  text-align:center;
+  border:1px solid var(--ink);
+  transition:transform .08s linear,background-color .12s linear;
+}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--ink);color:var(--paper);}
+.btn-primary:active{background:var(--red);border-color:var(--red);}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--rule-2);}
+.btn-ghost:active{border-color:var(--ink);background:var(--paper-3);}
+
+/* ── 状态行 ─────────────────────────────────────────── */
+.status{
+  min-height:18px;
+  margin-top:9px;
+  font-size:calc(12px * var(--tz));
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:var(--ink-3);
+}
+.status[data-kind="error"]{color:var(--red);}
+.undo-btn{
+  margin-left:9px;
+  padding:0 0 1px;
+  border-bottom:1px solid var(--red);
+  color:var(--red);
+  font-size:calc(12px * var(--tz));
+  letter-spacing:.06em;
+}
+.undo-btn[hidden]{display:none;}
+
+/* ── 结果页眉右侧：字节数 + 发给朋友 ───────── */
+.field-side{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+}
+.field-side .txt-btn[hidden]{display:none;}
+
+/* ── 字号三档：所有 font-size 都乘以 --tz ───────── */
+html{--tz:1;}
+html[data-size="s"]{--tz:.93;}
+html[data-size="l"]{--tz:1.13;}
+.status[data-kind="ok"]{color:var(--ink-2);}
+
+/* ── 输出 ───────────────────────────────────────────── */
+.output-shell{position:relative;min-height:96px;overflow:clip;}
+#outCipher{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px 10px;
+  padding:1px 0 3px;
+}
+#outCipher .grp{display:flex;}
+#outCipher .csym{
+  width:1.08em;
+  text-align:center;
+  font-size:calc(16.5px * var(--tz));
+  font-weight:700;
+  line-height:1.5;
+  font-variant-numeric:tabular-nums;
+  user-select:text;
+}
+#outPlain{
+  font-size:calc(15px * var(--tz));
+  line-height:1.75;
+  white-space:pre-wrap;
+  word-break:break-word;
+  user-select:text;
+}
+.out-empty{
+  font-size:calc(13px * var(--tz));
+  line-height:1.6;
+  color:var(--ink-3);
+}
+.out-foot{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  margin-top:8px;
+}
+
+
+/* ── 底部导航：瞬时切换 ──────────────────────────────── */
+.tabbar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  background:var(--paper);
+  border-top:1px solid var(--rule-2);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:20;
+}
+.tab{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  height:56px;
+  color:var(--ink-3);
+}
+.tab svg{
+  width:19px; height:19px;
+  fill:none; stroke:currentColor; stroke-width:1.2;
+  stroke-linecap:butt; stroke-linejoin:miter;
+}
+.tab span{
+  font-size:calc(10.5px * var(--tz));
+  letter-spacing:.10em;
+}
+.tab[aria-selected="true"]{color:var(--ink);}
+.tab[aria-selected="true"]::before{
+  content:"";
+  position:absolute;
+  top:-1px; left:50%;
+  width:34px; height:2px;
+  margin-left:-17px;
+  background:var(--ink);
+}
+.tab:active{background:var(--paper-3);}
+
+/* ── 公告页 ─────────────────────────────────────────── */
+.doc{padding-top:18px;}
+.doc + .doc{margin-top:26px;}
+.doc-h{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--rule-2);
+}
+.doc-h h2{
+  font-size:calc(16px * var(--tz));
+  font-weight:700;
+  letter-spacing:.06em;
+}
+.doc-h .doc-no{
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.14em;
+  color:var(--ink-3);
+}
+.doc-body{
+  padding-top:10px;
+  font-size:calc(14px * var(--tz));
+  line-height:1.85;
+  color:var(--ink-2);
+}
+.doc-body p + p{margin-top:9px;}
+.doc-body strong{color:var(--ink);font-weight:700;}
+.doc-body .em{color:var(--ink);}
+.formula{
+  margin-top:12px;
+  border:1px solid var(--rule);
+  background:var(--paper-2);
+  padding:10px 12px;
+  font-family:var(--mono);
+  font-size:calc(11.5px * var(--tz));
+  line-height:1.9;
+  letter-spacing:.06em;
+  color:var(--ink-2);
+  overflow-x:auto;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.formula b{color:var(--red);font-weight:400;}
+.log{margin-top:10px;}
+.log-item{
+  display:grid;
+  grid-template-columns:56px 1fr;
+  gap:10px;
+  padding:9px 0;
+  border-top:1px solid var(--rule);
+}
+.log-item:first-child{border-top:0;padding-top:2px;}
+.log-v{
+  font-family:var(--mono);
+  font-size:calc(11px * var(--tz));
+  letter-spacing:.04em;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+  padding-top:2px;
+}
+.log-item[data-latest="1"] .log-v{color:var(--red);}
+.log-ul{margin:0;padding:0;list-style:none;}
+.log-ul li{
+  font-size:calc(13.5px * var(--tz));
+  line-height:1.7;
+  color:var(--ink-2);
+  padding-left:11px;
+  position:relative;
+}
+.log-ul li::before{
+  content:"";
+  position:absolute;
+  left:0; top:.66em;
+  width:4px; height:1px;
+  background:var(--ink-3);
+}
+.doc-foot{
+  margin-top:26px;
+  padding-top:10px;
+  border-top:1px solid var(--rule-2);
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.12em;
+  color:var(--ink-3);
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* ── 存根（历史记录） ───────────────────────────────── */
+.stub-list{padding-top:4px;}
+.stub{
+  padding:13px 0 12px;
+  border-bottom:1px solid var(--rule);
+}
+.stub-top{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+}
+.stub-no{
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.10em;
+  color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+.stub-kind{
+  font-size:calc(11px * var(--tz));
+  letter-spacing:.10em;
+  color:var(--ink);
+}
+.stub-kind[data-kind="还原"]{color:var(--red);}
+.stub-time{
+  font-family:var(--mono);
+  font-size:calc(10px * var(--tz));
+  letter-spacing:.04em;
+  color:var(--ink-3);
+  font-variant-numeric:tabular-nums;
+}
+.stub-acts{
+  margin-left:auto;
+  display:flex;
+  gap:10px;
+}
+.stub-acts .txt-btn{font-size:calc(11px * var(--tz));}
+.stub-line{
+  margin-top:5px;
+  font-size:calc(14px * var(--tz));
+  line-height:1.55;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.stub-line[data-role="out"]{
+  font-family:var(--serif);
+  font-size:calc(12.5px * var(--tz));
+  color:var(--ink-3);
+  letter-spacing:.04em;
+}
+.empty-note{
+  padding:34px 0 0;
+  text-align:center;
+  color:var(--ink-3);
+  font-size:calc(13px * var(--tz));
+  line-height:1.7;
+}
+.empty-note .big{
+  display:block;
+  font-size:calc(15px * var(--tz));
+  color:var(--ink-2);
+  margin-bottom:4px;
+  letter-spacing:.06em;
+}
+.hist-note{
+  margin-top:22px;
+  padding-top:10px;
+  border-top:1px solid var(--rule);
+  font-size:calc(11.5px * var(--tz));
+  line-height:1.7;
+  color:var(--ink-3);
+}
+
+/* ── 使用须知（结构不动，只换配色排版） ──────────────── */
+.consent-overlay{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  background:rgba(20,21,14,.62);
+  padding:0;
+}
+:root[data-theme="ink"] .consent-overlay{background:rgba(0,0,0,.72);}
+.consent-box{
+  width:100%;
+  max-height:94dvh;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  background:var(--paper);
+  border-top:2px solid var(--ink);
+  padding:20px var(--gutter) calc(20px + env(safe-area-inset-bottom,0px));
+  overflow-y:auto;
+}
+.consent-box h2{
+  font-size:calc(18px * var(--tz));
+  font-weight:700;
+  letter-spacing:.04em;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--rule-2);
+}
+.consent-box > p{
+  font-size:calc(13px * var(--tz));
+  line-height:1.7;
+  color:var(--ink-3);
+}
+.consent-copy{
+  font-size:calc(13px * var(--tz));
+  line-height:1.85;
+  color:var(--ink-2);
+}
+.consent-copy strong{
+  display:block;
+  font-size:calc(12px * var(--tz));
+  font-weight:700;
+  letter-spacing:.12em;
+  color:var(--ink);
+  margin:2px 0 6px;
+}
+.consent-copy ul{
+  margin:0 0 10px;
+  padding:0;
+  list-style:none;
+  counter-reset:cl;
+}
+.consent-copy li{
+  position:relative;
+  padding-left:22px;
+  margin-bottom:7px;
+  counter-increment:cl;
+}
+.consent-copy li::before{
+  content:counter(cl,decimal-leading-zero);
+  position:absolute;
+  left:0; top:.35em;
+  font-family:var(--mono);
+  font-size:calc(9.5px * var(--tz));
+  letter-spacing:.04em;
+  color:var(--red);
+}
+.consent-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:9px;
+  padding-top:6px;
+}
+.consent-actions button{
+  padding:13px 10px;
+  font-size:calc(15px * var(--tz));
+  font-weight:700;
+  letter-spacing:.10em;
+  border:1px solid var(--ink);
+  background:var(--ink);
+  color:var(--paper);
+}
+.consent-actions button.disagree{
+  background:transparent;
+  color:var(--ink-3);
+  border-color:var(--rule-2);
+  font-size:calc(13px * var(--tz));
+  letter-spacing:.06em;
+  padding:11px 10px;
+}
+.consent-actions button:active{transform:translateY(1px);}
+
+.exit-screen{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100dvh;
+  padding:32px;
+  text-align:center;
+  background:var(--paper);
+  color:var(--ink);
+}
+.exit-screen h2{font-size:calc(18px * var(--tz));font-weight:700;letter-spacing:.04em;}
+.exit-screen p{margin-top:8px;font-size:calc(13px * var(--tz));color:var(--ink-3);line-height:1.7;}
+
+@media (min-width:520px){
+  .app{max-width:620px;margin:0 auto;border-left:1px solid var(--rule);border-right:1px solid var(--rule);}
+  /* width:100% is required: with only left:50% + right:0 the bar collapses to
+     half the viewport before max-width even matters. */
+  .tabbar{
+    max-width:620px;
+    width:100%;
+    left:50%;
+    transform:translateX(-50%);
+    border-left:1px solid var(--rule);
+    border-right:1px solid var(--rule);
+  }
+}
+
+/* 平板：册子摊开成左右两页，左页写、右页出密文 */
+@media (min-width:820px){
+  .app{max-width:1080px;}
+  .tabbar{max-width:1080px;}
+  .masthead{padding-left:34px;padding-right:34px;}
+  .page{padding-left:34px;padding-right:34px;}
+  /* the specimen strip bleeds to the page edges on phones; match it here */
+  .specimen{
+    margin-left:-34px;
+    margin-right:-34px;
+    padding-left:34px;
+    padding-right:34px;
+  }
+  .spec-d{font-size:calc(10px * var(--tz));}
+  .spec-g{font-size:calc(34px * var(--tz));}
+  .spread{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    align-items:start;
+  }
+  .leaf-a{padding-right:34px;}
+  .leaf-b{padding-left:34px;border-left:1px solid var(--rule);}
+  textarea#input{min-height:150px;max-height:320px;}
+  #outCipher .csym{font-size:calc(18px * var(--tz));}
+  .doc,.doc-foot{max-width:66ch;}
+  .empty-note,.hist-note{max-width:78ch;}
+  .consent-box{max-width:660px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="masthead">
+    <div class="masthead-main">
+      <h1 class="wordmark">吾苍耳冯福</h1>
+      <p class="tagline">五字符密码册 · 全部在本机完成</p>
+    </div>
+    <div class="masthead-side">
+      <span class="padno" id="padNo">册号 00000</span>
+      <div class="side-row">
+        <span class="ver" id="verLabel">v1.3.2</span>
+        <button class="theme-btn" id="themeToggle" type="button" aria-label="切换日夜版本">夜间版</button>
+        <button class="theme-btn" id="sizeToggle" type="button" aria-label="字号：中，点一下换下一档">字号 中</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="pages">
+
+    <!-- 编码器 -->
+    <section class="page is-active" id="view-editor" role="tabpanel" aria-labelledby="tab-editor">
+      <div class="specimen" id="specimen" aria-label="编码字符表：序号对应五进制位"></div>
+
+      <div class="spread">
+        <div class="leaf leaf-a">
+          <section class="field-block">
+            <div class="field-head">
+              <h2 class="field-label" id="inLabel">明文</h2>
+              <span class="field-meta" id="inMeta">0 字 · 0 字节</span>
+            </div>
+            <div class="shell" id="inShell">
+              <textarea id="input" rows="3" placeholder="写下要说的话……" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+            </div>
+            <div class="field-tools">
+              <button class="txt-btn" id="btnSwap" type="button">交换</button>
+              <button class="txt-btn" id="btnClear" type="button">清空</button>
+            </div>
+          </section>
+
+          <div class="actions">
+            <button class="btn btn-primary" id="btnEncode" type="button">编 码</button>
+            <button class="btn btn-ghost" id="btnDecode" type="button">还 原</button>
+          </div>
+
+          <p class="status" id="status"><span id="statusText" role="status" aria-live="polite"></span><button class="undo-btn" id="btnUndo" type="button" hidden>撤销</button></p>
+        </div>
+
+        <div class="leaf leaf-b">
+          <section class="field-block">
+            <div class="field-head">
+              <h2 class="field-label" id="outLabel">密文</h2>
+              <div class="field-side">
+                <span class="field-meta" id="outMeta">—</span>
+                <button class="txt-btn" id="btnShare" type="button" hidden>发给朋友</button>
+              </div>
+            </div>
+            <div class="shell output-shell">
+              <div id="outCipher"></div>
+              <p id="outPlain" hidden></p>
+              <p class="out-empty" id="outEmpty">密文出现在这里</p>
+            </div>
+            <div class="out-foot">
+              <button class="copy-btn" id="btnCopy" type="button" aria-label="一键复制结果" hidden>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8"/><path d="M10.5 5.5V2.5H2.5v8h3"/></svg>
+                <span id="btnCopyLabel">复制密文</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- 公告 -->
+    <section class="page" id="view-announce" role="tabpanel" aria-labelledby="tab-announce">
+      <div class="page-head">
+        <h1>公告</h1>
+        <span class="head-meta">第 1.3.2 版</span>
+      </div>
+
+      <article class="doc">
+        <div class="doc-h">
+          <h2>关于</h2>
+          <span class="doc-no">01</span>
+        </div>
+        <div class="doc-body">
+          <p>本应用由 <span class="em">ChatGPT6</span>、<span class="em">DeepSeek v4.1 Flash</span> 制作，感谢聂某、徐某提供的灵感。</p>
+        </div>
+      </article>
+
+      <article class="doc">
+        <div class="doc-h">
+          <h2>更新概述</h2>
+          <span class="doc-no">02</span>
+        </div>
+        <div class="doc-body">
+          <div class="log" id="logList"></div>
+        </div>
+      </article>
+
+      <div class="doc-foot">
+        <span>当前版本 v1.3.2</span>
+        <span>吾苍耳冯福</span>
+      </div>
+    </section>
+
+    <!-- 存根 -->
+    <section class="page" id="view-history" role="tabpanel" aria-labelledby="tab-history">
+      <div class="page-head">
+        <h1>存根</h1>
+        <span class="head-meta" id="histCount">0 张</span>
+      </div>
+      <div class="stub-list" id="historyList"></div>
+      <div class="empty-note" id="historyEmpty">
+        <span class="big">还没有留下存根</span>
+        编码或还原过的内容会记在这里，最多五十张。
+      </div>
+      <div class="hist-note" id="histFootnote">
+        存根只写在本机上，不会上传。点「清空」会全部作废，点两次才生效。
+      </div>
+      <div class="field-tools" style="justify-content:flex-end;margin-top:12px;">
+        <button class="txt-btn" id="clearHistory" type="button">清空存根</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="主导航">
+    <button class="tab" id="tab-editor" data-view="view-editor" role="tab" aria-selected="true" type="button">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="6.5" width="17" height="7"/><path d="M5.75 6.5v7M10 6.5v7M14.25 6.5v7"/></svg>
+      <span>编码器</span>
+    </button>
+    <button class="tab" id="tab-announce" data-view="view-announce" role="tab" aria-selected="false" type="button">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15"/><path d="M7 7h6M7 10.5h6M7 14h4"/></svg>
+      <span>公告</span>
+    </button>
+    <button class="tab" id="tab-history" data-view="view-history" role="tab" aria-selected="false" type="button">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.5V10l3.2 2"/></svg>
+      <span>存根</span>
+    </button>
+  </nav>
+</div>
+
+<div class="consent-overlay" id="consentOverlay" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+  <div class="consent-box">
+    <h2 id="consentTitle">使用须知与免责声明</h2>
+    <p>请先阅读以下内容。选择“同意”后才能进入密码编辑器。</p>
+    <div class="consent-copy">
+      <strong>免责声明</strong>
+      <ul>
+        <li>本工具仅供学习、文字编码、趣味交流及合法的个人用途，不应被视为专业的信息安全产品。</li>
+        <li>本工具使用可逆编码方式转换文字，并未提供密码学意义上的加密、身份验证或访问控制；请勿用它保存或传输账号密码、银行卡资料、个人隐私、商业机密等敏感信息。</li>
+        <li>开发者不对因使用、误用、无法解码、系统兼容性、设备故障或第三方获取密文而导致的资料丢失、泄露或其他损失承担保证责任。使用前请自行备份重要内容。</li>
+        <li>请确保输入、转换、保存及分享的内容符合所在地法律法规，并尊重他人隐私及合法权益。用户须对自己的使用行为和分享内容负责。</li>
+        <li>本应用在设备本地执行转换，不主动上传文本；但其他应用、系统权限、系统剪贴板及用户自行分享等因素仍可能影响信息安全。</li>
+      </ul>
+      <strong>继续使用本应用，即表示你已阅读并理解以上说明；如不同意，请停止使用。</strong>
+    </div>
+    <div class="consent-actions">
+      <button id="agreeConsent" type="button">同意并进入</button>
+      <button id="disagreeConsent" class="disagree" type="button">不同意，退出应用</button>
+    </div>
+  </div>
+</div>
+
+<textarea id="copySink" aria-hidden="true" tabindex="-1" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;resize:none;"></textarea>
+
+<script>
+(() => {
+  "use strict";
+
+  const ALPHABET = ["吾", "苍", "耳", "冯", "福"];
+  const HISTORY_KEY = "wcf-history";
+  const MAX_HISTORY = 50;
+  const PAD_KEY = "wcf-pad";
+  const root = document.documentElement;
+
+  const $ = (id) => document.getElementById(id);
+  const input = $("input");
+  const inLabel = $("inLabel"), inMeta = $("inMeta"), inShell = $("inShell");
+  const outLabel = $("outLabel"), outMeta = $("outMeta");
+  const copyLabel = $("btnCopyLabel");
+  const outCipher = $("outCipher"), outPlain = $("outPlain"), outEmpty = $("outEmpty");
+  const status = $("status"), statusText = $("statusText"), btnUndo = $("btnUndo");
+  const copySink = $("copySink");
+  const cipherEmptyText = "密文出现在这里";
+
+  /* ────────── 编解码：字节 → 四位五进制 ────────── */
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+
+  function encodeText(text) {
+    const bytes = encoder.encode(text);
+    let out = "";
+    for (const byte of bytes) {
+      let n = byte;
+      const digits = [0, 0, 0, 0];
+      for (let i = 3; i >= 0; i--) { digits[i] = n % 5; n = Math.floor(n / 5); }
+      for (const d of digits) out += ALPHABET[d];
+    }
+    return out;
+  }
+
+  function decodeText(cipher) {
+    const compact = String(cipher).replace(/\s+/gu, "");
+    if (!compact.length) throw new Error("先写点密文再还原。");
+    if (compact.length % 4 !== 0) {
+      throw new Error("有效字符共 " + compact.length + " 个，不是 4 的倍数，密文不完整。");
+    }
+    const bytes = new Uint8Array(compact.length / 4);
+    for (let i = 0; i < compact.length; i += 4) {
+      let value = 0;
+      for (let j = 0; j < 4; j++) {
+        const digit = ALPHABET.indexOf(compact[i + j]);
+        if (digit < 0) throw new Error("第 " + (i + j + 1) + " 个字符「" + compact[i + j] + "」不在吾苍耳冯福里。");
+        value = value * 5 + digit;
+      }
+      if (value > 255) throw new Error("第 " + (i / 4 + 1) + " 组超出字节范围，无法还原。");
+      bytes[i / 4] = value;
+    }
+    try { return decoder.decode(bytes); }
+    catch { throw new Error("这串符号不是有效的 UTF-8 数据，可能是抄漏了或顺序错了。"); }
+  }
+
+  /* ────────── 提示（可选六秒内撤销） ────────── */
+  let statusTimer = null;
+  let undoAction = null;
+  let undoTimer = null;
+
+  function hideUndo() {
+    clearTimeout(undoTimer);
+    undoAction = null;
+    btnUndo.hidden = true;
+  }
+
+  function setStatus(message, kind, undo) {
+    clearTimeout(statusTimer);
+    hideUndo();
+    statusText.textContent = message || "";
+    status.dataset.kind = kind || "";
+    if (message) {
+      statusTimer = setTimeout(() => { statusText.textContent = ""; status.dataset.kind = ""; }, 4200);
+    }
+    if (typeof undo === "function") {
+      undoAction = undo;
+      btnUndo.hidden = false;
+      undoTimer = setTimeout(hideUndo, 6000);
+    }
+  }
+
+  btnUndo.addEventListener("click", () => {
+    const run = undoAction;
+    hideUndo();
+    clearTimeout(statusTimer);
+    if (run) run();
+  });
+
+  /* ────────── 主题：日间版 / 夜间版 ────────── */
+  const themeToggle = $("themeToggle");
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  const saved = localStorage.getItem("wcf-theme");
+  if (saved === "dark") root.dataset.theme = "ink";
+  else if (saved === "light") root.dataset.theme = "paper";
+
+  function syncTheme() {
+    const isInk = root.dataset.theme === "ink";
+    themeToggle.textContent = isInk ? "日间版" : "夜间版";
+    themeToggle.setAttribute("aria-label", isInk ? "切换到日间版" : "切换到夜间版");
+    metaTheme.setAttribute("content", isInk ? "#14150E" : "#E8E9E0");
+  }
+  syncTheme();
+  themeToggle.addEventListener("click", () => {
+    const isInk = root.dataset.theme === "ink";
+    root.dataset.theme = isInk ? "paper" : "ink";
+    localStorage.setItem("wcf-theme", isInk ? "light" : "dark");
+    syncTheme();
+  });
+
+  /* ────────── 字号：小 / 中 / 大 ────────── */
+  const SIZE_KEY = "wcf-size";
+  const SIZES = [{ k: "s", label: "小" }, { k: "m", label: "中" }, { k: "l", label: "大" }];
+  const sizeToggle = $("sizeToggle");
+  let sizeIndex = 1;
+  try {
+    const i = SIZES.findIndex((s) => s.k === localStorage.getItem(SIZE_KEY));
+    if (i >= 0) sizeIndex = i;
+  } catch (_) {}
+
+  function syncSize() {
+    const s = SIZES[sizeIndex];
+    if (s.k === "m") delete root.dataset.size;
+    else root.dataset.size = s.k;
+    sizeToggle.textContent = "字号 " + s.label;
+    sizeToggle.setAttribute("aria-label", "字号：" + s.label + "，点一下换下一档");
+  }
+  syncSize();
+  sizeToggle.addEventListener("click", () => {
+    sizeIndex = (sizeIndex + 1) % SIZES.length;
+    try { localStorage.setItem(SIZE_KEY, SIZES[sizeIndex].k); } catch (_) {}
+    syncSize();
+  });
+
+  /* ────────── 册号 ────────── */
+  let padNo = 0;
+  try {
+    const stored = localStorage.getItem(PAD_KEY);
+    if (stored && /^\d{5}$/.test(stored)) padNo = Number(stored);
+    else {
+      padNo = 10000 + Math.floor(Math.random() * 89999);
+      localStorage.setItem(PAD_KEY, String(padNo));
+    }
+  } catch (_) { padNo = 31415; }
+  $("padNo").textContent = "册号 " + String(padNo).padStart(5, "0");
+
+  /* ────────── 字谱 ────────── */
+  const specimen = $("specimen");
+  ALPHABET.forEach((glyph, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "spec";
+    b.setAttribute("aria-label", "插入「" + glyph + "」，代表数字 " + i);
+    b.innerHTML = '<span class="spec-d">' + i + '</span><span class="spec-g">' + glyph + '</span>';
+    b.addEventListener("click", () => {
+      const at = input.selectionStart ?? input.value.length;
+      const to = input.selectionEnd ?? at;
+      input.value = input.value.slice(0, at) + glyph + input.value.slice(to);
+      const caret = at + glyph.length;
+      input.focus();
+      input.setSelectionRange(caret, caret);
+      syncInputMeta();
+    });
+    specimen.appendChild(b);
+  });
+
+  /* ────────── 输入侧元信息 ────────── */
+  function syncInputMeta() {
+    const v = input.value;
+    if (!v) { inMeta.textContent = "0 字 · 0 字节"; return; }
+    const bytes = encoder.encode(v).length;
+    inMeta.textContent = v.length + " 字 · " + bytes + " 字节";
+  }
+  function autoGrow() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 190) + "px";
+  }
+  input.addEventListener("input", () => { syncInputMeta(); autoGrow(); inShell.dataset.invalid = "0"; });
+  autoGrow();
+
+  /* ────────── 输出渲染 ────────── */
+  let currentOutput = "";
+  let currentMode = "cipher"; // cipher | plain
+
+  function renderCipher(text) {
+    outCipher.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < text.length; i += 4) {
+      const grp = document.createElement("span");
+      grp.className = "grp";
+      for (let j = 0; j < 4 && i + j < text.length; j++) {
+        const cell = document.createElement("span");
+        cell.className = "csym";
+        cell.textContent = text[i + j];
+        grp.appendChild(cell);
+      }
+      frag.appendChild(grp);
+    }
+    outCipher.appendChild(frag);
+  }
+
+  function clearOutput() {
+    currentOutput = "";
+    outCipher.innerHTML = "";
+    outPlain.textContent = "";
+    outPlain.hidden = true;
+    outCipher.hidden = false;
+    outEmpty.hidden = false;
+    outMeta.textContent = "";
+    $("btnCopy").hidden = true;
+    $("btnShare").hidden = true;
+  }
+
+  function showOutput(text, mode) {
+    currentOutput = text;
+    currentMode = mode;
+    if (!text) { clearOutput(); return; }
+    outEmpty.hidden = true;
+    $("btnCopy").hidden = false;
+    $("btnShare").hidden = !canShareOut;
+    if (mode === "cipher") {
+      outCipher.hidden = false;
+      outPlain.hidden = true;
+      renderCipher(text);
+      outMeta.textContent = (text.length / 4) + " 字节";
+    } else {
+      outCipher.hidden = true;
+      outPlain.hidden = false;
+      outPlain.textContent = text;
+      outMeta.textContent = text.length + " 字";
+    }
+  }
+
+  /* ────────── 撤销：只重放数据，不动 DOM 结构 ────────── */
+  function snapshotEditor() {
+    return {
+      input: input.value,
+      out: currentOutput,
+      mode: currentMode,
+      inLabel: inLabel.textContent
+    };
+  }
+
+  function restoreEditor(s) {
+    input.value = s.input;
+    inLabel.textContent = s.inLabel;
+    inShell.dataset.invalid = "0";
+    syncInputMeta();
+    autoGrow();
+    if (s.out) {
+      outLabel.textContent = s.mode === "cipher" ? "密文" : "明文";
+      copyLabel.textContent = s.mode === "cipher" ? "复制密文" : "复制明文";
+      showOutput(s.out, s.mode);
+    } else {
+      clearOutput();
+    }
+  }
+
+  /* ────────── 剪贴板 ────────── */
+  async function copyText(text) {
+    if (!text) return false;
+    try { await navigator.clipboard.writeText(text); return true; } catch (_) {}
+    try {
+      copySink.value = text;
+      copySink.select();
+      copySink.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy");
+      copySink.value = "";
+      copySink.blur();
+      return ok;
+    } catch (_) { return false; }
+  }
+
+  /* ────────── 存根 ────────── */
+  function loadHistory() {
+    try {
+      const v = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+      return Array.isArray(v) ? v : [];
+    } catch (_) { return []; }
+  }
+  function saveHistory(list) {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY))); } catch (_) {}
+  }
+  function addHistory(type, inputText, outputText) {
+    const list = loadHistory();
+    list.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      type, input: inputText, output: outputText, ts: Date.now()
+    });
+    saveHistory(list);
+    renderHistory();
+  }
+  function deleteHistory(id) {
+    saveHistory(loadHistory().filter((x) => x.id !== id));
+    renderHistory();
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+  function clip(s, n) {
+    s = String(s).replace(/\s+/gu, " ").trim();
+    return s.length > n ? s.slice(0, n) + "…" : s;
+  }
+  function two(n) { return String(n).padStart(2, "0"); }
+  function fmtDate(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate()) +
+      " " + two(d.getHours()) + ":" + two(d.getMinutes());
+  }
+  function fileStamp(ts) {
+    const d = new Date(ts);
+    return "" + d.getFullYear() + two(d.getMonth() + 1) + two(d.getDate()) +
+      "-" + two(d.getHours()) + two(d.getMinutes());
+  }
+  /* 存根导出成的纯文本：两头都留下，方便以后对照 */
+  function stubText(item, no) {
+    const first = item.type === "编码" ? "明文" : "密文";
+    const second = item.type === "编码" ? "密文" : "明文";
+    return [
+      "吾苍耳冯福 · 存根 NO." + no,
+      "类型：" + item.type,
+      "时间：" + fmtDate(item.ts),
+      "",
+      first + "：" + item.input,
+      "",
+      second + "：" + item.output,
+      ""
+    ].join("\r\n");
+  }
+  /* 安卓里走原生保存对话框；浏览器里退化为直接下载 */
+  function saveTextFile(name, text) {
+    if (window.AndroidShell && typeof window.AndroidShell.saveText === "function") {
+      try { window.AndroidShell.saveText(name, text); return "native"; } catch (_) {}
+    }
+    try {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => { URL.revokeObjectURL(url); }, 5000);
+      return "download";
+    } catch (_) {
+      return "fail";
+    }
+  }
+  function fmtStamp(ts) {
+    const d = new Date(ts);
+    return two(d.getMonth() + 1) + "-" + two(d.getDate()) + " " + two(d.getHours()) + ":" + two(d.getMinutes());
+  }
+
+  function renderHistory() {
+    const list = loadHistory();
+    const listEl = $("historyList");
+    const emptyEl = $("historyEmpty");
+    const footEl = $("histFootnote");
+    const countEl = $("histCount");
+    const clearBtn = $("clearHistory");
+
+    listEl.innerHTML = "";
+    const has = list.length > 0;
+    emptyEl.style.display = has ? "none" : "block";
+    footEl.style.display = has ? "block" : "none";
+    clearBtn.style.display = has ? "inline-block" : "none";
+    countEl.textContent = list.length + " 张";
+
+    list.forEach((item, i) => {
+      const row = document.createElement("div");
+      row.className = "stub";
+      row.innerHTML =
+        '<div class="stub-top">' +
+          '<span class="stub-no">NO. ' + String(list.length - i).padStart(3, "0") + '</span>' +
+          '<span class="stub-kind" data-kind="' + esc(item.type) + '">' + esc(item.type) + '</span>' +
+          '<span class="stub-time">' + fmtStamp(item.ts) + '</span>' +
+          '<span class="stub-acts">' +
+            '<button class="txt-btn h-load" type="button">载入</button>' +
+            '<button class="txt-btn h-copy" type="button">复制</button>' +
+            '<button class="txt-btn h-save" type="button">下载</button>' +
+            '<button class="txt-btn h-del" type="button">删除</button>' +
+          '</span>' +
+        '</div>' +
+        '<div class="stub-line" data-role="in">' + esc(clip(item.input, 46)) + '</div>' +
+        '<div class="stub-line" data-role="out">' + esc(clip(item.output, 46)) + '</div>';
+
+      row.querySelector(".h-load").addEventListener("click", () => {
+        input.value = item.input;
+        showOutput(item.output, item.type === "编码" ? "cipher" : "plain");
+        inLabel.textContent = item.type === "编码" ? "明文" : "密文";
+        outLabel.textContent = item.type === "编码" ? "密文" : "明文";
+        copyLabel.textContent = item.type === "编码" ? "复制密文" : "复制明文";
+        syncInputMeta();
+        autoGrow();
+        switchView("view-editor");
+        setStatus("已载入第 " + String(list.length - i).padStart(3, "0") + " 张存根。", "ok");
+      });
+      row.querySelector(".h-copy").addEventListener("click", async (e) => {
+        const btn = e.currentTarget;
+        const ok = await copyText(item.output);
+        btn.textContent = ok ? "已复制" : "复制失败";
+        btn.dataset.on = "1";
+        setTimeout(() => { btn.textContent = "复制"; btn.dataset.on = "0"; }, 1400);
+      });
+      row.querySelector(".h-save").addEventListener("click", (e) => {
+        const btn = e.currentTarget;
+        const no = String(list.length - i).padStart(3, "0");
+        const name = "吾苍耳冯福-存根-" + no + "-" + fileStamp(item.ts) + ".txt";
+        const how = saveTextFile(name, stubText(item, no));
+        if (how === "fail") { setStatus("导出失败，请重试。", "error"); return; }
+        btn.textContent = "已导出";
+        btn.dataset.on = "1";
+        setTimeout(() => { btn.textContent = "下载"; btn.dataset.on = "0"; }, 1400);
+        setStatus(how === "native" ? "已打开保存窗口：" + name : "已下载：" + name, "ok");
+      });
+      row.querySelector(".h-del").addEventListener("click", () => {
+        const before = loadHistory();
+        deleteHistory(item.id);
+        setStatus("已作废一张存根。", "ok", () => {
+          saveHistory(before);
+          renderHistory();
+          setStatus("已恢复那张存根。", "ok");
+        });
+      });
+      listEl.appendChild(row);
+    });
+  }
+
+  /* ────────── 导航：瞬时切换，不做滑动指示器 ────────── */
+  const VIEWS = ["view-editor", "view-announce", "view-history"];
+  function switchView(id) {
+    for (const v of VIEWS) {
+      const el = $(v);
+      const on = v === id;
+      el.classList.toggle("is-active", on);
+      el.hidden = !on;
+    }
+    document.querySelectorAll(".tab").forEach((b) => {
+      b.setAttribute("aria-selected", b.dataset.view === id ? "true" : "false");
+    });
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".tab").forEach((b) => {
+    b.addEventListener("click", () => switchView(b.dataset.view));
+  });
+
+  /* ────────── 转换 ────────── */
+  function doEncode() {
+    const text = input.value;
+    if (!text) { setStatus("先在明文里写点东西。", "error"); inShell.dataset.invalid = "1"; return; }
+    let out;
+    try { out = encodeText(text); }
+    catch (e) { setStatus("编码失败：" + e.message, "error"); return; }
+    inShell.dataset.invalid = "0";
+    inLabel.textContent = "明文";
+    outLabel.textContent = "密文";
+    copyLabel.textContent = "复制密文";
+    showOutput(out, "cipher");
+    setStatus(text.length + " 字 → " + out.length + " 个符号。", "ok");
+    addHistory("编码", text, out);
+  }
+
+  function doDecode() {
+    const text = input.value;
+    if (!text.trim()) { setStatus("先贴上要还原的密文。", "error"); inShell.dataset.invalid = "1"; return; }
+    let out;
+    try { out = decodeText(text); }
+    catch (e) {
+      inShell.dataset.invalid = "1";
+      setStatus(e.message, "error");
+      clearOutput();
+      return;
+    }
+    inShell.dataset.invalid = "0";
+    inLabel.textContent = "密文";
+    outLabel.textContent = "明文";
+    copyLabel.textContent = "复制明文";
+    showOutput(out, "plain");
+    setStatus("还原出 " + out.length + " 个字。", "ok");
+    addHistory("还原", text, out);
+  }
+
+  $("btnEncode").addEventListener("click", doEncode);
+  $("btnDecode").addEventListener("click", doDecode);
+
+  $("btnSwap").addEventListener("click", () => {
+    if (!currentOutput) { setStatus("还没有可交换的结果。", "error"); return; }
+    const before = snapshotEditor();
+    input.value = currentOutput;
+    syncInputMeta();
+    autoGrow();
+    clearOutput();
+    setStatus("结果已挪到上面的格子里。", "ok", () => {
+      restoreEditor(before);
+      setStatus("已撤回交换。", "ok");
+    });
+    input.focus();
+  });
+
+  $("btnClear").addEventListener("click", () => {
+    const before = snapshotEditor();
+    input.value = "";
+    syncInputMeta();
+    autoGrow();
+    clearOutput();
+    inLabel.textContent = "明文";
+    outLabel.textContent = "密文";
+    inShell.dataset.invalid = "0";
+    setStatus("已清空。", "ok", () => {
+      restoreEditor(before);
+      setStatus("已撤回清空。", "ok");
+    });
+    input.focus();
+  });
+
+  $("btnCopy").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    if (!currentOutput) { setStatus("还没有可复制的内容。", "error"); return; }
+    const ok = await copyText(currentOutput);
+    if (ok) {
+      copyLabel.textContent = "已复制";
+      btn.dataset.on = "1";
+      setStatus("已复制到剪贴板。", "ok");
+      setTimeout(() => {
+        btn.dataset.on = "0";
+        copyLabel.textContent = currentMode === "cipher" ? "复制密文" : "复制明文";
+      }, 1500);
+    } else {
+      setStatus("自动复制失败，请长按密文手动选取。", "error");
+    }
+  });
+
+  /* ────────── 与其它应用互通 ────────── */
+  const shell = window.AndroidShell || null;
+  const canShareOut = !!(shell && typeof shell.shareText === "function");
+
+  /* 收到分享的文字：看得出是密文就还原，否则就编码 */
+  function acceptShared(raw) {
+    if (!raw) return;
+    const text = String(raw);
+    const compact = text.replace(/\s+/gu, "");
+    const looksLikeCipher = compact.length >= 4 && compact.length % 4 === 0 &&
+      /^[\u543E\u82CD\u8033\u51AF\u798F]+$/.test(compact);
+    switchView("view-editor");
+    input.value = looksLikeCipher ? compact : text;
+    inLabel.textContent = looksLikeCipher ? "密文" : "明文";
+    syncInputMeta();
+    autoGrow();
+    if (looksLikeCipher) doDecode(); else doEncode();
+    setStatus(looksLikeCipher ? "已收到分享的密文。" : "已收到分享的文字。", "ok");
+  }
+
+  window.wcfReceive = acceptShared;
+  window.wcfPull = function () {
+    if (!shell || typeof shell.takeShared !== "function") return;
+    let pending = "";
+    try { pending = shell.takeShared() || ""; } catch (_) {}
+    if (pending) acceptShared(pending);
+  };
+
+  $("btnShare").addEventListener("click", async () => {
+    if (!currentOutput) { setStatus("还没有可发送的内容。", "error"); return; }
+    if (canShareOut) {
+      try { shell.shareText(currentOutput); setStatus("已打开分享面板。", "ok"); }
+      catch (_) { setStatus("分享失败，请改用复制。", "error"); }
+      return;
+    }
+    const ok = await copyText(currentOutput);
+    setStatus(ok ? "已复制，可以粘贴给朋友。" : "复制失败，请长按密文手动选取。", ok ? "ok" : "error");
+  });
+
+  /* ────────── 清空存根：两次点击 ────────── */
+  let armed = false, armTimer = null;
+  $("clearHistory").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    if (!loadHistory().length) { setStatus("还没有存根。", "ok"); return; }
+    if (!armed) {
+      armed = true;
+      btn.textContent = "再点一次作废全部";
+      btn.dataset.on = "1";
+      armTimer = setTimeout(() => {
+        armed = false;
+        btn.textContent = "清空存根";
+        btn.dataset.on = "0";
+      }, 3000);
+    } else {
+      clearTimeout(armTimer);
+      armed = false;
+      btn.textContent = "清空存根";
+      btn.dataset.on = "0";
+      const before = loadHistory();
+      saveHistory([]);
+      renderHistory();
+      setStatus("全部存根已作废。", "ok", () => {
+        saveHistory(before);
+        renderHistory();
+        setStatus("已恢复全部存根。", "ok");
+      });
+    }
+  });
+
+  /* ────────── 更新概述（累积，不替换） ────────── */
+  const CHANGELOG = [
+    {
+      v: "1.3.2",
+      items: [
+        "去掉了清单里多余的联网与网络状态权限，现在应用不申请任何权限。"
+      ]
+    },
+    {
+      v: "1.3.1",
+      items: [
+        "去掉了转换完成后盖的那枚朱印。"
+      ]
+    },
+    {
+      v: "1.3.0",
+      items: [
+        "可以从别的应用把文字分享进来，自动编成密文；收到密文则自动还原。",
+        "结果页眉多了「发给朋友」，直接调起系统分享面板。",
+        "页眉新增字号三档：小、中、大。",
+        "清空、交换、删除存根之后六秒内可以撤销。"
+      ]
+    },
+    {
+      v: "1.2.0",
+      items: [
+        "平板适配：屏幕够宽时摊成左右两页，左边写、右边出密文。",
+        "结果下面加了「一键复制」按钮：编码完复制密文，还原完复制明文。",
+        "存根可以「下载」成 txt 文件，存到手机里。",
+        "公告页删去原理与使用说明，只留关于与更新概述。"
+      ]
+    },
+    {
+      v: "1.1.0",
+      items: [
+        "全新外观：纸本密码册，页眉标册号，转换完成盖一枚朱印。",
+        "密文按四个一组排成栅格，五个字下方标出各自的位数。",
+        "历史记录改成一张张存根，可载入、复制、删除。",
+        "底部导航改为瞬时切换，去掉了滑动动画。"
+      ]
+    },
+    {
+      v: "1.0.2",
+      items: [
+        "文案改为手机应用口径，不再提浏览器与网页。",
+        "更贴合底部的切换动画，视图淡入。",
+        "关于页更新致谢：ChatGPT6、DeepSeek v4.1 Flash。"
+      ]
+    },
+    {
+      v: "1.0.1",
+      items: [
+        "新增公告与历史记录两个页面，底部可切换。",
+        "历史最多保留五十条，支持载入、复制结果、删除。"
+      ]
+    }
+  ];
+
+  (function renderLog() {
+    const box = $("logList");
+    box.innerHTML = "";
+    CHANGELOG.forEach((entry, i) => {
+      const item = document.createElement("div");
+      item.className = "log-item";
+      if (i === 0) item.dataset.latest = "1";
+      item.innerHTML =
+        '<span class="log-v">v' + entry.v + '</span>' +
+        '<ul class="log-ul">' + entry.items.map((t) => "<li>" + esc(t) + "</li>").join("") + '</ul>';
+      box.appendChild(item);
+    });
+  })();
+
+  /* ────────── 使用须知 ────────── */
+  const consentOverlay = $("consentOverlay");
+  $("agreeConsent").addEventListener("click", () => {
+    consentOverlay.style.display = "none";
+    input.focus();
+  });
+  $("disagreeConsent").addEventListener("click", () => {
+    document.body.innerHTML = '<div class="exit-screen"><div><h2>你已选择不同意</h2><p>应用已停止使用。你可以关闭本应用。</p></div></div>';
+    try { window.close(); } catch (_) {}
+  });
+
+  /* ────────── 起始状态 ────────── */
+  syncInputMeta();
+  clearOutput();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
